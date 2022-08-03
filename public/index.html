@@ -11,54 +11,28 @@
 </head>
 
 <body class="container">
+
     <div class="row mt-5">
-        <div class="col-sm-6 text-center">
+        <div class="col-sm-12">
+            <form class="d-grid">
+                <input type="text" name="email" class="form-control mb-2" placeholder="email">
+                <input type="password" name="password" class="form-control mb-2" placeholder="password">
+                <button class="btn btn-primary" type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-sm-12 d-grid">
             <div id="loginButtonDiv" data-onsuccess="onSignIn"></div>
         </div>
-
-        <div class="col-sm-6"></div>
     </div>
 
 
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <script>
-
-        window.onload = function () {
-
-            google.accounts.id.initialize({
-                client_id: "878948407763-ugmqhn0cfqqpdhkhn7kej3dtjjmqv5t6.apps.googleusercontent.com",
-                callback: onSignIn
-            });
-            google.accounts.id.renderButton(
-                document.getElementById("loginButtonDiv"),
-                { theme: "outline", size: "large" }  // customization attributes
-            );
-            google.accounts.id.prompt(); // also display the One Tap dialog
-        }
-
-        //TODO: modificar else
-        var url = (window.location.hostname.includes('localhost'))
-            ? 'http://localhost:8080/api/auth/google'
-            : 'http://localhost:8080/api/auth/google';
-
-
-        function onSignIn(googleUser) {
-            const id_token = googleUser.credential;
-            const data = { id_token };
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-                .then(resp => resp.json())
-                .then(data => console.log('Nuestro server', data))
-                .catch(console.log);
-
-        }
-
-    </script>
+    <script src="./js/auth.js"></script>
 
 </body>
 

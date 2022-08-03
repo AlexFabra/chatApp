@@ -1,8 +1,48 @@
-const { Socket } = require("socket.io")
+const { Socket } = require("socket.io");
+const { comprovarJwt } = require("../helpers/generar-jwt");
+const { ChatMensajes } = require("../models")
 
-const socketController = (socket = new Socket()) => {
-    // console.log('cliente conectado')
-    
+const chatMensajes = new ChatMensajes();
+
+const socketController = async (socket = new Socket(), io) => {
+    const token = socket.handshake.headers.token;
+    const usuario = await comprovarJwt(token);
+
+    if (!usuario) {
+        return socket.disconnect();
+    }
+
+    console.log(usuario.nombre + 'se ha conectado');
+
+    //agregar el usuario conectado:
+    chatMensajes.conectarUsuario(usuario);
+
+    //Conectar usuario a sala privada con su id:
+    socket.join(usuario.id)
+
+    //emitir a todos los usuarios activos:
+    io.emit('usuarios-activos', chatMensajes.usuariosArr);
+
+    //recibir los mensajes del historial al conectarse:
+    socket.emit('recibir-mensajes', chatMensajes.ultimos10);
+
+    //borrar usuarios desconectados:
+    socket.on('disconnect', () => {
+        chatMensajes.desconectarUsuario(usuario.id);
+        io.emit('usuarios-activos', chatMensajes.usuariosArr);
+    })
+
+    socket.on('enviar-mensaje', (payload) => {
+        const uid = payload.uid;
+        const msg = payload.msg;
+        if (uid) { //mensaje privado
+            socket.to(uid).emit('mensaje-privado',{ de: usuario.nombre, mensaje });
+        } else { //mensaje global
+            chatMensajes.enviarMensaje(usuario.id, usuario.nombre, msg);
+            io.emit('recibir-mensajes', chatMensajes.ultimos10);
+        }
+    });
+
 }
 
 module.exports = {
